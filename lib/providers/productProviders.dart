@@ -37,31 +37,54 @@ class ProductsProvider with ChangeNotifier {
     ),
   ];
 
-  var _showFavouritesOnly = false;
+  // var _showFavouritesOnly = false;
 
   List<Product> get items {
-    if (_showFavouritesOnly) {
-      return _items.where((item) => item.isFavourite).toList();
-    }
+    // if (_showFavouritesOnly) {
+    //   return _items.where((item) => item.isFavourite).toList();
+    // }
     return [..._items];
+  }
+
+
+  List<Product> get favouriteItems {
+    return items.where((favItem) => favItem.isFavourite).toList();
   }
 
   Product productFoundById(String id) {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  void showFavouritesProductsOny() {
-    _showFavouritesOnly = true;
-    notifyListeners();
-  }
+  // void showFavouritesProductsOny() {
+  //   _showFavouritesOnly = true;
+  //   notifyListeners();
+  // }
 
-  void showAll() {
-    _showFavouritesOnly = false;
-    notifyListeners();
-  }
+  // void showAll() {
+  //   _showFavouritesOnly = false;
+  //   notifyListeners();
+  // }
 
-  void addProduct() {
+  void addProduct(Product product) {
+    final newProduct = Product(DateTime.now().toString(), product.title, product.description, product.price, product.imageUrl, product.isFavourite);
     // _items.add(value)
+    _items.add(newProduct);
     notifyListeners();
   }
+
+  void updateProduct(String id, Product newProduct) {
+
+    final prodIndex = _items.indexWhere((prod) => prod.id == id);
+    if (prodIndex > 0){
+      _items[prodIndex] = newProduct;
+      notifyListeners();
+    }
+  }
+
+  void deleteProducts(String id) {
+    _items.removeWhere((product) => product.id == id);
+    notifyListeners();
+  }
+    
+  
 }

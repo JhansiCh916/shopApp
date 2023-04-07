@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:my_shop/providers/product.dart';
+import '../screens/editProductScreen.dart';
+import '../widgets/appDrawer.dart';
+import '../widgets/userProducts.dart';
 import '../providers/productProviders.dart';
 import 'package:provider/provider.dart';
 
 class UserProductsScreen extends StatelessWidget {
-  const UserProductsScreen({Key? key}) : super(key: key);
+  static const routeName = "/userProductsScreen";
 
   @override
   Widget build(BuildContext context) {
@@ -13,12 +15,18 @@ class UserProductsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text("Add your product"),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.add))
+          IconButton(onPressed: () {
+            Navigator.of(context).pushNamed(EditProductScreen.routeName);
+          }, icon: Icon(Icons.add))
         ],
       ),
+      drawer: AppDrawer(),
       body: Padding(
         padding: EdgeInsets.all(10),
-        child: ListView.builder(itemBuilder: itemBuilder),
+        child: ListView.builder(itemBuilder: (_, index) =>
+            UserproductsItem(product.items[index].id,product.items[index].title, product.items[index].imageUrl, product.deleteProducts),
+        itemCount: product.items.length,),
+
       ),
     );
   }
