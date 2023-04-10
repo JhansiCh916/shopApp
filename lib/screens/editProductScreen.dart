@@ -18,6 +18,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final _form = GlobalKey<FormState>();
   var editedProduct = Product("", "", "", 0, "", false);
   var init = true;
+  var isLoading = false;
 
   var initValues = {
     'title': '',
@@ -47,28 +48,54 @@ class _EditProductScreenState extends State<EditProductScreen> {
           'imageUrl': ''
         };
         imageController.text = editedProduct.imageUrl;
-      } else {
-        Provider.of<ProductsProvider>(context).addProduct(editedProduct);
       }
     }
     init = false;
     super.didChangeDependencies();
   }
 
-  
-  void saveForm() {
+  Future <void> saveForm() async {
+    final productId = ModalRoute.of(context)?.settings.arguments as String?;
     final isValid = _form.currentState?.validate();
     if (!isValid!) {
       return;
     }
     _form.currentState?.save();
-    if (editedProduct.id != null) {
-      Provider.of<ProductsProvider>(context, listen: false).updateProduct(editedProduct.id,editedProduct);
+    setState(() {
+      isLoading = true;
+    });
+    if (productId != null) {
+      await Provider.of<ProductsProvider>(context, listen: false).updateProduct(editedProduct.id,editedProduct);
+      Navigator.of(context).pop();
+      setState(() {
+        isLoading = false;
+      });
     } else {
-      Provider.of<ProductsProvider>(context, listen: false).addProduct(editedProduct);
+      try {
+        await Provider.of<ProductsProvider>(context, listen: false).addProduct(editedProduct);
+      } catch(error) {
+        return showDialog(context: context, builder: (ctx) {
+          return AlertDialog(
+            title: Text("There is a error"),content: Text("Something went wrong"),
+            actions: [
+              TextButton(onPressed: () {
+                setState(() {
+                  isLoading = false;
+                });
+                Navigator.of(ctx).pop();
+
+              }, child: Text("okay"))
+            ],
+          );
+        });
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.of(context).pop();
+      }
     }
 
-    Navigator.of(context).pop();
   }
 
   void submitUrl() {
@@ -102,7 +129,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
         title: const Text("Edit product"),
         actions: [IconButton(onPressed: saveForm, icon: Icon(Icons.save))],
       ),
-      body: Padding(
+      body: isLoading ? Center(child: CircularProgressIndicator(
+        backgroundColor: Colors.grey,
+      ),) : Padding(
         padding: EdgeInsets.all(8),
         child: Form(
           key: _form,

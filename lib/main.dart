@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:my_shop/screens/editProductScreen.dart';
+import '../providers/auth.dart';
+import 'package:my_shop/providers/product.dart';
+import '../screens/auth_screen.dart';
+import '../screens/editProductScreen.dart';
+import '../screens/splash_screen.dart';
 import '../providers/orders.dart';
 import '../screens/orderScreen.dart';
 import '../screens/userProductScreen.dart';
@@ -22,21 +26,26 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return MultiProvider(providers: [
-        ChangeNotifierProvider(
-        create:(ctx) => ProductsProvider(),
+      ChangeNotifierProvider(create: (ctx) => Auth()),
+        ChangeNotifierProxyProvider<Auth, ProductsProvider>(
+          create: (ctx) => ProductsProvider("", [],""),
+        update: (ctx, auth, previousProducts) => ProductsProvider(auth.token ?? "", previousProducts == null ? [] : previousProducts.items, auth.userId ?? ""),
         ),
         ChangeNotifierProvider(
         create: (ctx) => Cart(),),
-    ChangeNotifierProvider(
-    create: (ctx) => Orders(),),
+    ChangeNotifierProxyProvider<Auth, Orders>(create: (ctx) =>Orders("", [],""),
+        update: (ctx, auth, previousOrders) => Orders(auth.token ?? "", previousOrders == null ? [] : previousOrders.orders,auth.userId ?? "")),
     ],
-      child: MaterialApp(
+      child: Consumer<Auth>(builder: (ctx, auth, _) => MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
-          primarySwatch: Colors.purple,
-          accentColor: Colors.deepOrange
+            primarySwatch: Colors.purple,
+            accentColor: Colors.deepOrange
         ),
-        home: ProductsOverViewScreen(),
+        home: auth.isAuth ?
+        ProductsOverViewScreen() :  FutureBuilder(builder: (ctx, authResultSnapshot) =>
+        authResultSnapshot.connectionState == ConnectionState.waiting ?
+        SplashScreen() : AuthScreen(), future: auth.tryAutoLogIn(),),
         routes: {
           ProductDetailScreen.routeName: (context) => ProductDetailScreen(),
           CartView.routeName: (context) => CartView(),
@@ -44,7 +53,7 @@ class MyApp extends StatelessWidget {
           UserProductsScreen.routeName: (context) => UserProductsScreen(),
           EditProductScreen.routeName: (context) => EditProductScreen(),
         },
-      ),
+      ),)
     );
   }
 }

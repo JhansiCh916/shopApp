@@ -18,6 +18,35 @@ class ProductsOverViewScreen extends StatefulWidget {
 
 class _ProductsOverViewScreenState extends State<ProductsOverViewScreen> {
   var _showFavaouritesOnly = false;
+  var isInit = true;
+  var isLoading = false;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    // Future.delayed(Duration.zero).then((_) {
+    //   Provider.of<ProductsProvider>(context).fetchAndSetProducts();
+    // });
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    if (isInit) {
+      setState(() {
+        isLoading == true;
+      });
+      Provider.of<ProductsProvider>(context).fetchAndSetProducts().then((value) {
+        setState(() {
+          isLoading == false;
+        });
+      });
+    }
+    isInit = false;
+    // Provider.of<ProductsProvider>(context).fetchAndSetProducts();
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +93,9 @@ class _ProductsOverViewScreenState extends State<ProductsOverViewScreen> {
         ],
       ),
       drawer: AppDrawer(),
-      body: ProductsGrid(_showFavaouritesOnly),
+      body: isLoading ? Center(
+        child: CircularProgressIndicator(),
+      ) : ProductsGrid(_showFavaouritesOnly),
     );
   }
 }
